@@ -10,6 +10,131 @@
 ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
 
+  // ================= MIGRATION MODAL & ANNOUNCEMENT BAR =================
+  // Show modal only once per session
+  const migrationModal = document.getElementById('migrationModal');
+  const migrationCta = document.getElementById('migrationCta');
+  const migrationClose = document.getElementById('migrationClose');
+  const migrationCountdown = document.getElementById('migrationCountdown');
+  const ANNOUNCE_KEY = 'migrationModalShown';
+  let countdown = 5;
+
+  function openMigrationModal() {
+    migrationModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo('.migration-content', { y: 60, opacity: 0, scale: 0.92 }, { y: 0, opacity: 1, scale: 1, duration: 0.7, ease: 'power3.out' });
+      gsap.fromTo('.migration-cta', { boxShadow: '0 0 0 0 transparent' }, { boxShadow: '0 0 40px 8px #a855f7, 0 0 80px 16px #6366f1', duration: 1.2, repeat: -1, yoyo: true, ease: 'power1.inOut' });
+    }
+    // Countdown
+    countdown = 5;
+    migrationCountdown.textContent = `Redirecting in ${countdown} seconds...`;
+    const timer = setInterval(() => {
+      countdown--;
+      migrationCountdown.textContent = `Redirecting in ${countdown} seconds...`;
+      if (countdown <= 0) {
+        clearInterval(timer);
+        fadeRedirect();
+      }
+    }, 1000);
+    migrationModal.dataset.timer = timer;
+  }
+
+  function closeMigrationModal() {
+    migrationModal.classList.remove('open');
+    document.body.style.overflow = '';
+    migrationCountdown.textContent = '';
+    if (migrationModal.dataset.timer) clearInterval(migrationModal.dataset.timer);
+    localStorage.setItem(ANNOUNCE_KEY, '1');
+  }
+
+  function fadeRedirect() {
+    if (typeof gsap !== 'undefined') {
+      gsap.to('body', { opacity: 0, duration: 0.7, onComplete: () => { window.location.href = 'https://malikirteza.com'; } });
+    } else {
+      window.location.href = 'https://malikirteza.com';
+    }
+  }
+
+  // Open modal if not shown this session
+  if (!localStorage.getItem(ANNOUNCE_KEY)) {
+    setTimeout(openMigrationModal, 900);
+  }
+
+  migrationCta.addEventListener('click', fadeRedirect);
+  migrationClose.addEventListener('click', closeMigrationModal);
+  migrationModal.querySelector('.migration-backdrop').addEventListener('click', closeMigrationModal);
+  document.addEventListener('keydown', e => { if (migrationModal.classList.contains('open') && e.key === 'Escape') closeMigrationModal(); });
+
+  // Announcement bar GSAP entrance
+  if (typeof gsap !== 'undefined') {
+    gsap.from('.announcement-bar', { y: -40, opacity: 0, duration: 0.8, ease: 'power3.out' });
+  }
+
+  // ================= MIGRATION: UPDATE ALL BUTTONS & LINKS =================
+  // Utility to update all major CTAs, nav, footer, homepage, and contact buttons
+  function updateAllCtas() {
+    // Hero section
+    const heroCtas = document.querySelectorAll('.hero-ctas .btn, .about-actions .btn-primary, .about-actions .btn-ghost');
+    heroCtas.forEach(btn => {
+      if (btn.textContent.match(/work|started|visit|learn|talk|contact|hire|open/i)) {
+        btn.innerHTML = '<span>Visit New Website</span><i class="fa fa-arrow-up-right-from-square"></i>';
+      } else {
+        btn.innerHTML = '<span>Open New Website</span><i class="fa fa-arrow-up-right-from-square"></i>';
+      }
+      btn.onclick = e => { e.preventDefault(); fadeRedirect(); };
+    });
+
+    // Navbar CTA
+    const navCta = document.querySelector('.nav-cta');
+    if (navCta) {
+      navCta.innerHTML = '<span>Visit New Website</span><i class="fa fa-arrow-up-right-from-square"></i>';
+      navCta.onclick = e => { e.preventDefault(); fadeRedirect(); };
+    }
+
+    // Footer links
+    document.querySelectorAll('.footer-links-col a, .footer-contact-col a, .footer-socials a').forEach(link => {
+      link.onclick = e => { e.preventDefault(); fadeRedirect(); };
+      link.setAttribute('href', 'https://malikirteza.com');
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener');
+    });
+
+    // WhatsApp FAB
+    const waFab = document.querySelector('.wa-fab');
+    if (waFab) {
+      waFab.onclick = e => { e.preventDefault(); fadeRedirect(); };
+      waFab.setAttribute('href', 'https://malikirteza.com');
+    }
+
+    // Contact section CTAs
+    const hireBtn = document.getElementById('hireBtn');
+    if (hireBtn) {
+      hireBtn.innerHTML = '<span>Visit New Website</span><i class="fa fa-arrow-up-right-from-square"></i>';
+      hireBtn.onclick = e => { e.preventDefault(); fadeRedirect(); };
+      hireBtn.setAttribute('href', 'https://malikirteza.com');
+    }
+    const whatsappBtn = document.getElementById('whatsappBtn');
+    if (whatsappBtn) {
+      whatsappBtn.innerHTML = '<i class="fab fa-whatsapp whatsapp-icon"></i><span>Visit New Website</span><div class="wa-pulse"></div>';
+      whatsappBtn.onclick = e => { e.preventDefault(); fadeRedirect(); };
+      whatsappBtn.setAttribute('href', 'https://malikirteza.com');
+    }
+
+    // Project modal CTA
+    const observer = new MutationObserver(() => {
+      document.querySelectorAll('.modal-cta a').forEach(a => {
+        a.innerHTML = '<span>Visit New Website</span><i class="fa fa-arrow-up-right-from-square"></i>';
+        a.onclick = e => { e.preventDefault(); fadeRedirect(); };
+        a.setAttribute('href', 'https://malikirteza.com');
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener');
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  updateAllCtas();
+
   /* ============================================================
      1. PAGE LOADER
   ============================================================ */
